@@ -55,6 +55,7 @@ DBAPsrc //actual class for the single source
 				|item, i|
 				synth[i] = Synth(\dbapSpkr, [\in, bus, \amp, a[i], \out, i], addAction:\addToTail); //synth for each speaker with right parameters
 			});
+			this.xy(aX, aY);
 		}
 	}
 
@@ -107,10 +108,65 @@ DBAPsrc //actual class for the single source
 			|item, i|
 			synth[i].set(\amp, change[i]);
 		});
+		this.changed(\xy, [id, newX, newY]);
 		^change;
 	}
 
 	nSpeakers{^dbapArr.size}
+
+	xy{^[x, y]}
+}
+
+
+DBAPPlot
+{
+	var <>dbapSrc, <>dbapArr;
+	var <>dim = 300;
+	var <>ptD = 15;
+	var <>or;
+	var <>window;
+	*new
+	{
+		|aDBAPSpeakerArray, aDBAP|
+		^super.new.initDBAPPlot(aDBAPSpeakerArray, aDBAP);
+	}
+
+	initDBAPPlot
+	{
+		|dbapArray, dbap|
+		case
+		{dbap.class != Array}{dbapSrc = [dbap]}
+		{dbap.class == Array}{dbapSrc = dbap};
+		dbapArr = dbapArray;
+		or = Point(dim, dim);
+		dbapSrc.do{|i| i.addDependant(this)};
+		this.createWindow;
+	}
+
+	createWindow
+	{
+	var col = 0.05;
+		window = Window("Plot", Rect(100, 100, dim*2, dim*2))
+		.background_(Color.black)
+		.drawFunc_{
+			dbapSrc.do{
+				|i, id|
+				Pen.fillColor_(Color.hsv(col*id, 0.9, 1)) ; //probably color dies once id reaches a too big of a number
+				Pen.fillOval(
+					Rect(
+						i.xy[0]*dim-(ptD*0.5)+or.x,
+						i.xy[1].neg*dim-(ptD*0.5)+or.y,
+						ptD,
+						ptD);
+				)
+			}
+		}.front.alwaysOnTop_(true);
+	}
+
+	update { arg theChanged, theChanger, more;
+		"test".postln;
+		window.refresh;
+	}
 }
 /*
 SynthDef(\test, { //actual synth
@@ -127,6 +183,8 @@ c = DBAPsrc.new(1, 1, 1, x, 0.01); // <-- id, initial x and y, DBAPSpeakerArray 
 Synth(\test, [\out, c.bus, \freq, 1000]); //<-- routes the synths out to the class' bus
 
 c.xy_(-1, -0) //<-- new position of the source
+
+a = DBAPPlot.new(x, c); //<-- plotting
 
 ~trajectory = { //<-- trajectory function
 	arg x1, y1, x2, y2, //starting and ending point
@@ -156,27 +214,4 @@ c.xy_(-1, -0) //<-- new position of the source
 ~trajectory.(-1, 1, 1, -1, 5, \exp, c)
 ~trajectory.(1, -1, -1, 1, 5, \exp, c)
 
-
-*/
-
-/*
-DBAPSpeaker
-{
-var <>x, <>y;
-*new
-{
-|x, y|
-^super.new.initDBAPSpeaker(x, y);
-}
-
-
-initDBAPSpeaker
-{
-|xS, yS|
-x = xS;
-y = yS;
-}
-
-
-}
 */
