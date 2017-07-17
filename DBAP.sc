@@ -20,7 +20,7 @@ DBAPsrc //actual class for the single source
 	var <>vi, <>dist, <>r;
 	var <>synth;
 	var <>a;
-	var x, y;
+	var <>x, <>y;
 
 	*new
 	{
@@ -55,7 +55,7 @@ DBAPsrc //actual class for the single source
 				|item, i|
 				synth[i] = Synth(\dbapSpkr, [\in, bus, \amp, a[i], \out, i], addAction:\addToTail); //synth for each speaker with right parameters
 			});
-			this.xy(aX, aY);
+			this.xy_(aX, aY);
 		}
 	}
 
@@ -104,6 +104,7 @@ DBAPsrc //actual class for the single source
 		|newX, newY|
 		var change = [];
 		change = this.calcV(newX, newY); //calculate again x and y
+
 		dbapArr.do({
 			|item, i|
 			synth[i].set(\amp, change[i]);
@@ -115,6 +116,8 @@ DBAPsrc //actual class for the single source
 	nSpeakers{^dbapArr.size}
 
 	xy{^[x, y]}
+
+	returnID{^id}
 }
 
 
@@ -125,6 +128,8 @@ DBAPPlot
 	var <>ptD = 15;
 	var <>or;
 	var <>window;
+	var <>id, <>x, <>y;
+
 	*new
 	{
 		|aDBAPSpeakerArray, aDBAP|
@@ -138,42 +143,54 @@ DBAPPlot
 		{dbap.class != Array}{dbapSrc = [dbap]}
 		{dbap.class == Array}{dbapSrc = dbap};
 		dbapArr = dbapArray;
+		x = Array.newClear(dbapSrc.size);
+		y = Array.newClear(dbapSrc.size);
 		or = Point(dim, dim);
-		dbapSrc.do{|i| i.addDependant(this)};
+		dbapSrc.do{|item, i| item.addDependant(this); x[i] = item.x; y[i] = item.y};
 		this.createWindow;
 	}
 
 	createWindow
 	{
-	var col = 0.05;
+		var col = 0.05;
 		window = Window("Plot", Rect(100, 100, dim*2, dim*2))
 		.background_(Color.black)
 		.drawFunc_{
 			dbapSrc.do{
-				|i, id|
-				Pen.fillColor_(Color.hsv(col*id, 0.9, 1)) ; //probably color dies once id reaches a too big of a number
+				|item, i|
+				"happening!".postln;
+				Pen.fillColor_(Color.hsv(col*i, 0.9, 1)) ; //probably color dies once i reaches a too big of a number
 				Pen.fillOval(
 					Rect(
-						i.xy[0]*dim-(ptD*0.5)+or.x,
-						i.xy[1].neg*dim-(ptD*0.5)+or.y,
+						x[i]*dim-(ptD*0.5)+or.x,
+						y[i].neg*dim-(ptD*0.5)+or.y,
 						ptD,
 						ptD);
-				)
+				);
 			}
 		}.front.alwaysOnTop_(true);
 	}
 
-	update { arg theChanged, theChanger, more;
-		"test".postln;
+	update {
+		| theChanged, theChanger, upd|
+		dbapSrc.do{
+			|item, i|
+			if (item.returnID == upd[0], {
+				x[i] = upd[1];
+				y[i] = upd[2];
+			},
+			"nope".postln;
+			)
+		};
 		window.refresh;
 	}
 }
 /*
 SynthDef(\test, { //actual synth
-	arg out, freq = 100;
-	var sig;
-	sig = SinOsc.ar(freq)*LFPulse.kr(1);
-	Out.ar(out, sig);
+arg out, freq = 100;
+var sig;
+sig = SinOsc.ar(freq)*LFPulse.kr(1);
+Out.ar(out, sig);
 }).add;
 
 x = DBAPSpeakerArray.new([[-1, 1], [1, 1], [1, -1], [-1, -1]]); //<-- set speakers position (this case quadriphony)
@@ -184,34 +201,7 @@ Synth(\test, [\out, c.bus, \freq, 1000]); //<-- routes the synths out to the cla
 
 c.xy_(-1, -0) //<-- new position of the source
 
-a = DBAPPlot.new(x, c); //<-- plotting
 
-~trajectory = { //<-- trajectory function
-	arg x1, y1, x2, y2, //starting and ending point
-	dur, //duration
-	curve = \exp, //type of curve
-	src, //who to spatialize
-	sr = 0.01; //rate for movement
-	var xLenght = x2-x1 ; //total lenght of the trajectory
-	var numPoints = (dur/sr).asInteger ; //number of points of the envelope
-	var xStep = xLenght / numPoints ;
-	var env = Env([y1, y2], [1], curve).asSignal(numPoints).asArray; //the envelope
-	{
-		src.xy_(x1, y1);
-		env.do{ //the update routine
-			|i, j|
-			src.xy_(xStep*j+x1, i);
-			//updated values
-			sr.wait; //waits sr time
-		};
-	}.fork(AppClock)
-};
-
-~trajectory.(-1, 1, -1, -1, 5, \exp, c) <--some trajectories
-~trajectory.(-1, -1, -1, 1, 5, \exp, c)
-~trajectory.(-1, 1, 1, 1, 5, \exp, c)
-~trajectory.(1, 1, -1, 1, 5, \exp, c)
-~trajectory.(-1, 1, 1, -1, 5, \exp, c)
-~trajectory.(1, -1, -1, 1, 5, \exp, c)
-
-*/
+c = Array.fill(5, {|i |DBAPsrc.new(i, rrand(-1.0, 1.0), rrand(-1.0, 1.0), x, 0.01);}); //<-- multiple sources
+a = DBAPPlot.new(x, c);
+5.do{|i| c[i].xy_(rrand(-1.0, 1.0), rrand(-1.0, 1.0))};
