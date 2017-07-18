@@ -1,6 +1,5 @@
 //Stefano Catena, Conservatorio Giuseppe Verdi Milano
 //07.17
-
 DBAPSpeakerArray //a convinient class just to set the speakers position in x, y
 {
 	var <>arrayOfPositionsXY;
@@ -184,6 +183,15 @@ DBAPPlot
 		}.front.alwaysOnTop_(true);
 	}
 
+	newSrc{
+		|aNewSrc|
+		dbapSrc = dbapSrc.add(aNewSrc);
+		x.add();
+		y.add();
+		dbapSrc.do{|item, i| item.addDependant(this); x[i] = item.x; y[i] = item.y;};
+		window.refresh;
+	}
+
 	update {
 		| theChanged, theChanger, upd|
 		dbapSrc.do{
@@ -217,3 +225,4 @@ c.xy_(-1, -0) //<-- new position of the source
 c = Array.fill(5, {|i |DBAPsrc.new(i, rrand(-1.0, 1.0), rrand(-1.0, 1.0), x, 0.01);}); //<-- multiple sources
 a = DBAPPlot.new(x, c);
 5.do{|i| c[i].xy_(rrand(-1.0, 1.0), rrand(-1.0, 1.0))};
+*/
