@@ -146,6 +146,7 @@ DBAPPlot
 		{dbap.class != Array}{dbapSrc = [dbap]}
 		{dbap.class == Array}{dbapSrc = dbap};
 		dbapArr = dbapArray;
+		dbapArr.postln;
 		x = Array.newClear(dbapSrc.size);
 		y = Array.newClear(dbapSrc.size);
 		or = Point(dim, dim);
@@ -159,9 +160,18 @@ DBAPPlot
 		window = Window("Plot", Rect(100, 100, dim*2, dim*2))
 		.background_(Color.black)
 		.drawFunc_{
+			dbapArr.do({
+				|item, i|
+				var rX, rY, rect;
+				rect = 30;
+				rX = item[0].linlin(-1.0, 1.0, rect*0.5, (dim*2)-(rect*1.5));
+				rY = item[1].linlin(-1.0, 1.0, rect*0.5, (dim*2)-(rect*1.5));
+				Pen.color_(Color.white);
+				Pen.addRect(Rect(rX, rY, rect, rect));
+				Pen.perform([\stroke]);
+			});
 			dbapSrc.do{
 				|item, i|
-				"happening!".postln;
 				Pen.fillColor_(Color.hsv(col*i, 0.9, 1)) ; //probably color dies once i reaches a too big of a number
 				Pen.fillOval(
 					Rect(
@@ -170,7 +180,7 @@ DBAPPlot
 						ptD,
 						ptD);
 				);
-			}
+			};
 		}.front.alwaysOnTop_(true);
 	}
 
@@ -181,8 +191,7 @@ DBAPPlot
 			if (item.returnID == upd[0], {
 				x[i] = upd[1];
 				y[i] = upd[2];
-			},
-			"nope".postln;
+			}
 			)
 		};
 		window.refresh;
