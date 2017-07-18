@@ -1,3 +1,6 @@
+//Stefano Catena, Conservatorio Giuseppe Verdi Milano
+//07.17
+
 DBAPSpeakerArray //a convinient class just to set the speakers position in x, y
 {
 	var <>arrayOfPositionsXY;
