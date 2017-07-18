@@ -224,5 +224,12 @@ c.xy_(-1, -0) //<-- new position of the source
 
 c = Array.fill(5, {|i |DBAPsrc.new(i, rrand(-1.0, 1.0), rrand(-1.0, 1.0), x, 0.01);}); //<-- multiple sources
 a = DBAPPlot.new(x, c);
-5.do{|i| c[i].xy_(rrand(-1.0, 1.0), rrand(-1.0, 1.0))};
+{
+inf.do{
+	5.do{|i|
+   	  c[i].xy_(rrand(-1.0, 1.0), rrand(-1.0, 1.0));
+	};
+     1.wait;
+}; 
+}.fork(AppClock);
 */
